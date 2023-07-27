@@ -9,11 +9,20 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+/*
+    TODO:
+    Create Graphical Filter
+    Add Logo and Such
+    Update prefixes on slider.
+    Have it only filter the reverb -> Needs a highpass
+*/
+
 //==============================================================================
 SimpleReverbAudioProcessorEditor::SimpleReverbAudioProcessorEditor (SimpleReverbAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), roomSizeAT(audioProcessor.apvts, "roomSize", roomSize),
     dampingAT(audioProcessor.apvts, "damping", damping), dryWetAT(audioProcessor.apvts, "dryWet", dryWet),
-    widthAT(audioProcessor.apvts, "width", width), freezeAT(audioProcessor.apvts, "freeze", freeze)
+    widthAT(audioProcessor.apvts, "width", width), freezeAT(audioProcessor.apvts, "freeze", freeze),
+    lowPassAT(audioProcessor.apvts, "lowPass", lowPass), highPassAT(audioProcessor.apvts, "highPass", highPass)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -38,6 +47,16 @@ SimpleReverbAudioProcessorEditor::SimpleReverbAudioProcessorEditor (SimpleReverb
     dryWet.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
     dryWet.setName("Dry/Wet");
     addAndMakeVisible(dryWet);
+
+    highPass.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    highPass.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
+    highPass.setName("Dry/Wet");
+    addAndMakeVisible(highPass);
+
+    lowPass.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    lowPass.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
+    lowPass.setName("Dry/Wet");
+    addAndMakeVisible(lowPass);
 
     freeze.setToggleState(false, juce::dontSendNotification);
     freeze.setButtonText("Freeze");
@@ -84,6 +103,12 @@ void SimpleReverbAudioProcessorEditor::resized()
 
     auto dryWetBounds = top.removeFromLeft(top.getWidth());
     dryWet.setBounds(dryWetBounds);
+
+    auto highPassBounds = bottom.removeFromLeft(bottom.getWidth() * .25);
+    highPass.setBounds(highPassBounds);
+
+    auto lowPassBounds = bottom.removeFromRight(bottom.getWidth() * .33);
+    lowPass.setBounds(lowPassBounds);
 
     freeze.setBounds(bottom);
 

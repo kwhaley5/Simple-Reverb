@@ -31,10 +31,10 @@ private:
     SimpleReverbAudioProcessor& audioProcessor;
     Laf lnf;
 
-    juce::Slider roomSize, damping, dryWet, width;
+    juce::Slider roomSize, damping, dryWet, width, lowPass, highPass;
     juce::ToggleButton freeze;
 
-    juce::AudioProcessorValueTreeState::SliderAttachment roomSizeAT, dampingAT, dryWetAT, widthAT;
+    juce::AudioProcessorValueTreeState::SliderAttachment roomSizeAT, dampingAT, dryWetAT, widthAT, lowPassAT, highPassAT;
     juce::AudioProcessorValueTreeState::ButtonAttachment freezeAT;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleReverbAudioProcessorEditor)

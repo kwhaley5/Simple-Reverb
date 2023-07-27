@@ -61,24 +61,24 @@ public:
 
 private:
 
-    std::array<juce::dsp::IIR::Filter<float>, 2> filters;
-
-    juce::Reverb reverb;
     juce::Reverb::Parameters params;
 
     enum
     {
-        filterIndex,
+        highPassIndex,
+        lowPassIndex,
         reverbIndex
     };
 
-    using MonoChain = juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>, juce::dsp::Reverb>;
+    using MonoChain = juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Filter<float>, juce::dsp::Reverb>;
     MonoChain leftChain, rightChain;
 
     juce::AudioParameterFloat* roomSize{ nullptr };
     juce::AudioParameterFloat* damping{ nullptr };
     juce::AudioParameterFloat* dryWet{ nullptr };
     juce::AudioParameterFloat* width{ nullptr };
+    juce::AudioParameterFloat* highPass{nullptr};
+    juce::AudioParameterFloat* lowPass{nullptr};
     juce::AudioParameterBool* freeze{ nullptr };
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleReverbAudioProcessor)

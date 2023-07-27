@@ -27,6 +27,8 @@ SimpleReverbAudioProcessor::SimpleReverbAudioProcessor()
     dryWet = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("dryWet"));
     width = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("width"));
     freeze = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("freeze"));
+    highPass = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("highPass"));
+    lowPass = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("lowPass"));
 }
 
 SimpleReverbAudioProcessor::~SimpleReverbAudioProcessor()
@@ -109,9 +111,11 @@ void SimpleReverbAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     leftChain.prepare(spec);
     rightChain.prepare(spec);
 
-    auto coef = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(sampleRate, 1000);
-    leftChain.get<filterIndex>().coefficients = coef;
-    rightChain.get<filterIndex>().coefficients = coef;
+    auto coef = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(sampleRate, 100);
+    leftChain.get<highPassIndex>().coefficients = coef;
+    leftChain.get<lowPassIndex>().coefficients = coef;
+    rightChain.get<highPassIndex>().coefficients = coef;
+    rightChain.get<lowPassIndex>().coefficients = coef;
 }
 
 void SimpleReverbAudioProcessor::releaseResources()
@@ -167,6 +171,13 @@ void SimpleReverbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     auto& verbRight = rightChain.get<reverbIndex>();
     verbRight.setParameters(params);
 
+    auto coefHighPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(getSampleRate(), highPass->get());
+    auto coefLowPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), lowPass->get());
+    leftChain.get<highPassIndex>().coefficients = coefHighPass;
+    rightChain.get<highPassIndex>().coefficients = coefHighPass;
+    leftChain.get<lowPassIndex>().coefficients = coefLowPass;
+    rightChain.get<lowPassIndex>().coefficients = coefLowPass;
+
     juce::dsp::AudioBlock<float> block(buffer);
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
@@ -211,11 +222,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::
     AudioProcessorValueTreeState::ParameterLayout layout;
 
     auto range = NormalisableRange<float>(0, 1, .01, 1);
+    auto freqRange = NormalisableRange<float>(20, 20000, 1, .5);
 
     layout.add(std::make_unique<AudioParameterFloat>("roomSize", "Room Size", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("damping", "Damping", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("dryWet", "Dry/Wet", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("width", "Width", range, .5));
+    layout.add(std::make_unique<AudioParameterFloat>("highPass", "High Pass", freqRange, 100));
+    layout.add(std::make_unique<AudioParameterFloat>("lowPass", "Low Pass", freqRange, 15000));
     layout.add(std::make_unique<AudioParameterBool>("freeze", "Freeze", false));
 
     return layout;
