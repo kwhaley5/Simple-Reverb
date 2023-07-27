@@ -31,7 +31,11 @@ private:
     SimpleReverbAudioProcessor& audioProcessor;
     Laf lnf;
 
-    juce::Slider test;
+    juce::Slider roomSize, damping, dryWet, width;
+    juce::ToggleButton freeze;
+
+    juce::AudioProcessorValueTreeState::SliderAttachment roomSizeAT, dampingAT, dryWetAT, widthAT;
+    juce::AudioProcessorValueTreeState::ButtonAttachment freezeAT;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleReverbAudioProcessorEditor)
 };

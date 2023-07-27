@@ -118,7 +118,7 @@ void Laf::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int heigh
 
 }
 
-void drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
+void Laf::drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
     bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
 {
     auto fontSize = juce::jmin(15.0f, (float)button.getHeight());

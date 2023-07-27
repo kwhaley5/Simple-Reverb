@@ -22,6 +22,11 @@ SimpleReverbAudioProcessor::SimpleReverbAudioProcessor()
                        )
 #endif
 {
+    roomSize = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("roomSize"));
+    damping = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("damping"));
+    dryWet = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("dryWet"));
+    width = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("width"));
+    freeze = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("freeze"));
 }
 
 SimpleReverbAudioProcessor::~SimpleReverbAudioProcessor()
@@ -181,6 +186,22 @@ void SimpleReverbAudioProcessor::setStateInformation (const void* data, int size
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::createParameterLayout()
+{
+    using namespace juce;
+    AudioProcessorValueTreeState::ParameterLayout layout;
+
+    auto range = NormalisableRange<float>(0, 1, .01, 1);
+
+    layout.add(std::make_unique<AudioParameterFloat>("roomSize", "Room Size", range, .5));
+    layout.add(std::make_unique<AudioParameterFloat>("damping", "Damping", range, .5));
+    layout.add(std::make_unique<AudioParameterFloat>("dryWet", "Dry/Wet", range, .5));
+    layout.add(std::make_unique<AudioParameterFloat>("width", "Width", range, .5));
+    layout.add(std::make_unique<AudioParameterBool>("freeze", "Freeze", false));
+
+    return layout;
 }
 
 //==============================================================================

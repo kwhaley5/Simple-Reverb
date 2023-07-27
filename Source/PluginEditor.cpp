@@ -11,18 +11,41 @@
 
 //==============================================================================
 SimpleReverbAudioProcessorEditor::SimpleReverbAudioProcessorEditor (SimpleReverbAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p), roomSizeAT(audioProcessor.apvts, "roomSize", roomSize),
+    dampingAT(audioProcessor.apvts, "damping", damping), dryWetAT(audioProcessor.apvts, "dryWet", dryWet),
+    widthAT(audioProcessor.apvts, "width", width), freezeAT(audioProcessor.apvts, "freeze", freeze)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setLookAndFeel(&lnf);
-    setSize (400, 300);
 
-    test.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    test.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
-    test.setName("test");
-    test.setValue(100);
-    addAndMakeVisible(test);
+    roomSize.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    roomSize.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
+    roomSize.setName("Size");
+    addAndMakeVisible(roomSize);
+
+    damping.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    damping.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
+    damping.setName("Damping");
+    addAndMakeVisible(damping);
+
+    width.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    width.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
+    width.setName("Width");
+    addAndMakeVisible(width);
+
+    dryWet.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    dryWet.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
+    dryWet.setName("Dry/Wet");
+    addAndMakeVisible(dryWet);
+
+    freeze.setToggleState(false, juce::dontSendNotification);
+    freeze.setButtonText("Freeze");
+    addAndMakeVisible(freeze);
+
+    setSize (600, 400);
+
+
 }
 
 SimpleReverbAudioProcessorEditor::~SimpleReverbAudioProcessorEditor()
@@ -47,5 +70,21 @@ void SimpleReverbAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
     auto bounds = getLocalBounds();
-    test.setBounds(bounds);
+    auto top = bounds.removeFromTop(bounds.getHeight() * .5);
+    auto bottom = bounds;
+
+    auto roomBounds = top.removeFromLeft(top.getWidth() * .25);
+    roomSize.setBounds(roomBounds);
+
+    auto dampingBounds = top.removeFromLeft(top.getWidth() * .33);
+    damping.setBounds(dampingBounds);
+
+    auto widthBounds = top.removeFromLeft(top.getWidth() * .5);
+    width.setBounds(widthBounds);
+
+    auto dryWetBounds = top.removeFromLeft(top.getWidth());
+    dryWet.setBounds(dryWetBounds);
+
+    freeze.setBounds(bottom);
+
 }
