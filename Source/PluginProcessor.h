@@ -61,6 +61,20 @@ public:
 
 private:
 
+    std::array<juce::dsp::IIR::Filter<float>, 2> filters;
+
+    juce::Reverb reverb;
+    juce::Reverb::Parameters params;
+
+    enum
+    {
+        filterIndex,
+        reverbIndex
+    };
+
+    using MonoChain = juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>, juce::dsp::Reverb>;
+    MonoChain leftChain, rightChain;
+
     juce::AudioParameterFloat* roomSize{ nullptr };
     juce::AudioParameterFloat* damping{ nullptr };
     juce::AudioParameterFloat* dryWet{ nullptr };
