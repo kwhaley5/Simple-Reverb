@@ -65,12 +65,12 @@ private:
 
     enum
     {
+        reverbIndex,
         highPassIndex,
-        lowPassIndex,
-        reverbIndex
+        lowPassIndex
     };
 
-    using MonoChain = juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Filter<float>, juce::dsp::Reverb>;
+    using MonoChain = juce::dsp::ProcessorChain< juce::dsp::Reverb, juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Filter<float> >;
     MonoChain leftChain, rightChain;
 
     juce::AudioParameterFloat* roomSize{ nullptr };

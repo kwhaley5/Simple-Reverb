@@ -171,6 +171,8 @@ void SimpleReverbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     auto& verbRight = rightChain.get<reverbIndex>();
     verbRight.setParameters(params);
 
+    auto wetSignal = verbLeft.getParameters().wetLevel;
+
     auto coefHighPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(getSampleRate(), highPass->get());
     auto coefLowPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), lowPass->get());
     leftChain.get<highPassIndex>().coefficients = coefHighPass;
