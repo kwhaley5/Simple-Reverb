@@ -23,6 +23,7 @@ SimpleReverbAudioProcessorEditor::SimpleReverbAudioProcessorEditor (SimpleReverb
     dampingAT(audioProcessor.apvts, "damping", damping), dryWetAT(audioProcessor.apvts, "dryWet", dryWet),
     widthAT(audioProcessor.apvts, "width", width), freezeAT(audioProcessor.apvts, "freeze", freeze),
     lowPassAT(audioProcessor.apvts, "lowPass", lowPass), highPassAT(audioProcessor.apvts, "highPass", highPass)
+    //filtersAT(audioProcessor.apvts, "filters", filters)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -57,6 +58,13 @@ SimpleReverbAudioProcessorEditor::SimpleReverbAudioProcessorEditor (SimpleReverb
     lowPass.setTextBoxStyle(juce::Slider::NoTextBox, false, 100, 20);
     lowPass.setName("Dry/Wet");
     addAndMakeVisible(lowPass);
+    
+    filters.addItem("x2", 1);
+    filters.addItem("x4", 2);
+    filters.addItem("x8", 3);
+    filters.addItem("x16", 4);
+    addAndMakeVisible(filters);
+    filtersAT = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.apvts, "filters", filters);
 
     freeze.setToggleState(false, juce::dontSendNotification);
     freeze.setButtonText("Freeze");
@@ -109,6 +117,9 @@ void SimpleReverbAudioProcessorEditor::resized()
 
     auto lowPassBounds = bottom.removeFromRight(bottom.getWidth() * .33);
     lowPass.setBounds(lowPassBounds);
+
+    auto filtersBounds = bottom.removeFromBottom(bottom.getHeight() * .5);
+    filters.setBounds(filtersBounds);
 
     freeze.setBounds(bottom);
 

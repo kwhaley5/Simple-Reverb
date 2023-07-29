@@ -29,6 +29,7 @@ SimpleReverbAudioProcessor::SimpleReverbAudioProcessor()
     freeze = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("freeze"));
     highPass = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("highPass"));
     lowPass = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("lowPass"));
+    filters = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("filters"));
 }
 
 SimpleReverbAudioProcessor::~SimpleReverbAudioProcessor()
@@ -202,20 +203,22 @@ bool SimpleReverbAudioProcessor::hasEditor() const
 juce::AudioProcessorEditor* SimpleReverbAudioProcessor::createEditor()
 {
     return new SimpleReverbAudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
 void SimpleReverbAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
 void SimpleReverbAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid()) {
+        apvts.replaceState(tree);
+    }
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::createParameterLayout()
@@ -226,6 +229,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::
     auto range = NormalisableRange<float>(0, 1, .01, 1);
     auto freqRange = NormalisableRange<float>(20, 20000, 1, .5);
 
+    auto choices = std::vector<int>{ 2, 4, 8, 16 };
+    juce::StringArray sa;
+    for (auto choice : choices)
+    {
+        sa.add(juce::String(choice));
+    }
+
     layout.add(std::make_unique<AudioParameterFloat>("roomSize", "Room Size", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("damping", "Damping", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("dryWet", "Dry/Wet", range, .5));
@@ -233,6 +243,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::
     layout.add(std::make_unique<AudioParameterFloat>("highPass", "High Pass", freqRange, 100));
     layout.add(std::make_unique<AudioParameterFloat>("lowPass", "Low Pass", freqRange, 15000));
     layout.add(std::make_unique<AudioParameterBool>("freeze", "Freeze", false));
+    layout.add(std::make_unique<AudioParameterChoice>("filters", "Filters", sa, 2));
 
     return layout;
 }
@@ -242,4 +253,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new SimpleReverbAudioProcessor();
+}
+
+void SimpleReverbAudioProcessor::filteredReverb::processStereo(float* const left, float* const right, const int numSamples)
+{
+
 }

@@ -59,6 +59,11 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts{*this, nullptr, "parameters", createParameterLayout()};
 
+    struct filteredReverb : juce::Reverb
+    {
+        void processStereo(float* const left, float* const right, const int numSamples);
+    };
+
 private:
 
     juce::Reverb::Parameters params;
@@ -69,7 +74,6 @@ private:
         highPassIndex,
         lowPassIndex
     };
-
     using MonoChain = juce::dsp::ProcessorChain< juce::dsp::Reverb, juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Filter<float> >;
     MonoChain leftChain, rightChain;
 
@@ -80,6 +84,7 @@ private:
     juce::AudioParameterFloat* highPass{nullptr};
     juce::AudioParameterFloat* lowPass{nullptr};
     juce::AudioParameterBool* freeze{ nullptr };
+    juce::AudioParameterChoice* filters{nullptr};
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleReverbAudioProcessor)
 };

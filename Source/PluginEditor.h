@@ -33,8 +33,10 @@ private:
 
     juce::Slider roomSize, damping, dryWet, width, lowPass, highPass;
     juce::ToggleButton freeze;
+    juce::ComboBox filters;
 
     juce::AudioProcessorValueTreeState::SliderAttachment roomSizeAT, dampingAT, dryWetAT, widthAT, lowPassAT, highPassAT;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> filtersAT;
     juce::AudioProcessorValueTreeState::ButtonAttachment freezeAT;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleReverbAudioProcessorEditor)
