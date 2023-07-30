@@ -27,8 +27,7 @@ SimpleReverbAudioProcessor::SimpleReverbAudioProcessor()
     dryWet = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("dryWet"));
     width = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("width"));
     freeze = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("freeze"));
-    highPass = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("highPass"));
-    lowPass = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("lowPass"));
+
 }
 
 SimpleReverbAudioProcessor::~SimpleReverbAudioProcessor()
@@ -98,7 +97,7 @@ void SimpleReverbAudioProcessor::changeProgramName (int index, const juce::Strin
 }
 
 //==============================================================================
-void SimpleReverbAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void SimpleReverbAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -108,14 +107,9 @@ void SimpleReverbAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     spec.numChannels = 1;
     spec.sampleRate = sampleRate;
 
-    leftChain.prepare(spec);
-    rightChain.prepare(spec);
+    reverb.reset();
+    reverb.prepare(spec);
 
-    auto coef = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(sampleRate, 100);
-    leftChain.get<highPassIndex>().coefficients = coef;
-    leftChain.get<lowPassIndex>().coefficients = coef;
-    rightChain.get<highPassIndex>().coefficients = coef;
-    rightChain.get<lowPassIndex>().coefficients = coef;
 }
 
 void SimpleReverbAudioProcessor::releaseResources()
@@ -156,6 +150,12 @@ void SimpleReverbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    //rms levels for meters
+    for (auto channel = 0; channel < totalNumInputChannels; channel++) {
+        rmsIn[channel] = juce::Decibels::gainToDecibels(buffer.getRMSLevel(channel, 0, buffer.getNumSamples()));
+        if (rmsIn[channel] < -60) { rmsIn[channel] = -60; }
+    }
+
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
@@ -166,29 +166,19 @@ void SimpleReverbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     params.roomSize = roomSize->get();
     params.width = width->get();
 
-    auto& verbLeft = leftChain.get<reverbIndex>();
-    verbLeft.setParameters(params);
-    auto& verbRight = rightChain.get<reverbIndex>();
-    verbRight.setParameters(params);
-
-    auto coefHighPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(getSampleRate(), highPass->get());
-    auto coefLowPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(getSampleRate(), lowPass->get());
-    leftChain.get<highPassIndex>().coefficients = coefHighPass;
-    rightChain.get<highPassIndex>().coefficients = coefHighPass;
-    leftChain.get<lowPassIndex>().coefficients = coefLowPass;
-    rightChain.get<lowPassIndex>().coefficients = coefLowPass;
+    reverb.setParameters(params);
 
     juce::dsp::AudioBlock<float> block(buffer);
-    auto leftBlock = block.getSingleChannelBlock(0);
-    auto rightBlock = block.getSingleChannelBlock(1);
+    juce::dsp::ProcessContextReplacing<float> context(block);
 
-    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
-    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
+    reverb.process(context);
 
-    leftChain.process(leftContext);
-    rightChain.process(rightContext);
+    //rms levels for meters
+    for (auto channel = 0; channel < totalNumInputChannels; channel++) {
+        rmsOut[channel] = juce::Decibels::gainToDecibels(buffer.getRMSLevel(channel, 0, buffer.getNumSamples()));
+        if (rmsOut[channel] < -60) { rmsOut[channel] = -60; }
+    }
 
-    
 }
 
 //==============================================================================
@@ -205,15 +195,28 @@ juce::AudioProcessorEditor* SimpleReverbAudioProcessor::createEditor()
 //==============================================================================
 void SimpleReverbAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
 void SimpleReverbAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid()) {
+        apvts.replaceState(tree);
+    }
+}
+
+float SimpleReverbAudioProcessor::getRMS(int channel)
+{
+    jassert(channel == 0 || channel == 1);
+    return rmsIn[channel];
+}
+
+float SimpleReverbAudioProcessor::getOutRMS(int channel)
+{
+    jassert(channel == 0 || channel == 1);
+    return rmsOut[channel];
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::createParameterLayout()
@@ -222,14 +225,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleReverbAudioProcessor::
     AudioProcessorValueTreeState::ParameterLayout layout;
 
     auto range = NormalisableRange<float>(0, 1, .01, 1);
-    auto freqRange = NormalisableRange<float>(20, 20000, 1, .5);
 
     layout.add(std::make_unique<AudioParameterFloat>("roomSize", "Room Size", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("damping", "Damping", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("dryWet", "Dry/Wet", range, .5));
     layout.add(std::make_unique<AudioParameterFloat>("width", "Width", range, .5));
-    layout.add(std::make_unique<AudioParameterFloat>("highPass", "High Pass", freqRange, 100));
-    layout.add(std::make_unique<AudioParameterFloat>("lowPass", "Low Pass", freqRange, 15000));
     layout.add(std::make_unique<AudioParameterBool>("freeze", "Freeze", false));
 
     return layout;

@@ -56,29 +56,24 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    float getRMS(int channel);
+    float getOutRMS(int channel);
+
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts{*this, nullptr, "parameters", createParameterLayout()};
 
 private:
 
+    juce::dsp::Reverb reverb;
     juce::Reverb::Parameters params;
 
-    enum
-    {
-        highPassIndex,
-        lowPassIndex,
-        reverbIndex
-    };
-
-    using MonoChain = juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Filter<float>, juce::dsp::Reverb>;
-    MonoChain leftChain, rightChain;
+    std::array<float, 2> rmsIn;
+    std::array<float, 2> rmsOut;
 
     juce::AudioParameterFloat* roomSize{ nullptr };
     juce::AudioParameterFloat* damping{ nullptr };
     juce::AudioParameterFloat* dryWet{ nullptr };
     juce::AudioParameterFloat* width{ nullptr };
-    juce::AudioParameterFloat* highPass{nullptr};
-    juce::AudioParameterFloat* lowPass{nullptr};
     juce::AudioParameterBool* freeze{ nullptr };
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleReverbAudioProcessor)

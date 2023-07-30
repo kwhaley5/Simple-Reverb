@@ -3,6 +3,11 @@
 <JUCERPROJECT id="hAWqha" name="SimpleReverb" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="KiTiK Music">
   <MAINGROUP id="JA3m9W" name="SimpleReverb">
+    <GROUP id="{D5EB9967-D21A-A4B9-A53E-747A3DC5FFFA}" name="Assets">
+      <FILE id="TXwBW3" name="OFFSHORE.TTF" compile="0" resource="1" file="../../../APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/OFFSHORE.TTF"/>
+      <FILE id="yE7L14" name="KITIK_LOGO_NO_BKGD.png" compile="0" resource="1"
+            file="../../Muisc/Pictures/KITIK_LOGO_NO_BKGD.png"/>
+    </GROUP>
     <GROUP id="{AD8A1847-5816-84CD-D99B-B00A61728C73}" name="Source">
       <FILE id="pC638n" name="KiTiKLNF.h" compile="0" resource="0" file="Source/KiTiKLNF.h"/>
       <FILE id="jyOo92" name="KiTiKLNF.cpp" compile="1" resource="0" file="Source/KiTiKLNF.cpp"/>
