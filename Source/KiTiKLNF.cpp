@@ -83,7 +83,7 @@ void Laf::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int heigh
 
     auto str = String('none');
     auto value = slider.getValue();
-    if (value < 1) {
+    if (value <= 1) {
         value *= 100;
         str = String(value);
         str.append("%", 3);
